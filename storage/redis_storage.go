@@ -23,8 +23,7 @@ func NewRedisStorage(client redis.UniversalClient, next *IFallbackStorage) IStor
 	}
 }
 
-func (r redisStorage) Get(key string, valuePtr interface{}) (err error) {
-	var bytes []byte
+func (r redisStorage) GetBytes(key string) (bytes []byte, err error) {
 
 	func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
@@ -36,15 +35,23 @@ func (r redisStorage) Get(key string, valuePtr interface{}) (err error) {
 	case nil:
 	case redis.Nil:
 		if r.next == nil {
-			return ErrNil
+			return nil, ErrNil
 		}
-		if err = (*r.next).Get(key, &bytes); err != nil {
+		if bytes, err = (*r.next).GetBytes(key); err != nil {
 			return
 		}
+		err = r.Set(key, bytes)
 	default:
 		return
 	}
+	return
+}
 
+func (r redisStorage) Get(key string, valuePtr interface{}) (err error) {
+	var bytes []byte
+	if bytes, err = r.GetBytes(key); err != nil {
+		return
+	}
 	return r.codec.Decode(bytes, valuePtr)
 }
 

@@ -23,13 +23,29 @@ func BenchmarkBigcacheSet_Bytes(b *testing.B) {
 	}
 }
 
-func BenchmarkBigcacheGet(b *testing.B) {
+func BenchmarkBigcacheGetBytes(b *testing.B) {
 	client, _ := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Minute))
 	store := NewBigCacheStorage(client, nil)
 
 	key := "test"
 	_ = store.Set(key, []byte("value"))
 
+	for k := 0.; k <= 10; k++ {
+		n := int(math.Pow(2, k))
+		b.Run(fmt.Sprintf("%d", n), func(b *testing.B) {
+			for i := 0; i < b.N*n; i++ {
+				_, _ = store.GetBytes(key)
+			}
+		})
+	}
+}
+
+func BenchmarkBigcacheGet(b *testing.B) {
+	client, _ := bigcache.NewBigCache(bigcache.DefaultConfig(5 * time.Minute))
+	store := NewBigCacheStorage(client, nil)
+
+	key := "test"
+	_ = store.Set(key, []byte("value"))
 	var value []byte
 	for k := 0.; k <= 10; k++ {
 		n := int(math.Pow(2, k))

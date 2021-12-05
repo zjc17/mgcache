@@ -31,6 +31,12 @@ func (d defaultFallbackStorage) Get(key string, valuePtr interface{}) (err error
 	return
 }
 
+func (d defaultFallbackStorage) GetBytes(key string) (bytes []byte, err error) {
+	var loadedValue interface{}
+	loadedValue, err = d.loadFunc(key)
+	return d.codec.Encode(loadedValue)
+}
+
 func (d defaultFallbackStorage) Invalidate(_ string) (err error) {
 	return
 }

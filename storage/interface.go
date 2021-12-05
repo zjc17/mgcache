@@ -14,7 +14,10 @@ type (
 	// IFallbackStorage is the cache in the layer lower than IStorage
 	IFallbackStorage interface {
 		// Get loads the data into value pointed to by valuePtr
+		// TODO move to IStorage
 		Get(key string, value interface{}) (err error)
+		// GetBytes returns the encoded value data stored in cache
+		GetBytes(key string) (bytes []byte, err error)
 		// Invalidate removes the cached key and propagates to the next layer of IStorage
 		Invalidate(key string) (err error)
 	}

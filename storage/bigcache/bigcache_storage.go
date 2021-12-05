@@ -31,20 +31,25 @@ func NewBigCacheStorage(client BigcacheInterface,
 
 func (b bigCacheStorage) Get(key string, valuePtr interface{}) (err error) {
 	var bytes []byte
-	bytes, err = b.client.Get(key)
-	switch err {
-	case nil:
-	case bigcache.ErrEntryNotFound:
-		if b.next == nil {
-			return storage.ErrNil
-		}
-		if err = b.next.Get(key, &bytes); err != nil {
-			return
-		}
-	default:
+	if bytes, err = b.GetBytes(key); err != nil {
 		return
 	}
 	return b.codec.Decode(bytes, valuePtr)
+}
+
+func (b bigCacheStorage) GetBytes(key string) (bytes []byte, err error) {
+	bytes, err = b.client.Get(key)
+	if err == bigcache.ErrEntryNotFound {
+		if b.next == nil {
+			return nil, storage.ErrNil
+		}
+		// TODO refactor and use refresh
+		if bytes, err = b.next.GetBytes(key); err != nil {
+			return
+		}
+		err = b.Set(key, bytes)
+	}
+	return
 }
 
 func (b bigCacheStorage) Set(key string, value interface{}) (err error) {

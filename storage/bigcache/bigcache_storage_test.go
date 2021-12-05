@@ -93,7 +93,7 @@ func TestBigcacheWithNotFoundAndFallback(t *testing.T) {
 	expectedErr := errors.New("an unexpected error occurred")
 
 	mockBigCache.EXPECT().Get(cacheKey).Return(nil, bigcache.ErrEntryNotFound)
-	mockNextStorage.EXPECT().Get(cacheKey, gomock.Any()).Return(expectedErr)
+	mockNextStorage.EXPECT().GetBytes(cacheKey).Return(nil, expectedErr)
 
 	// When
 	var value string
@@ -103,7 +103,7 @@ func TestBigcacheWithNotFoundAndFallback(t *testing.T) {
 	assert.Equal(t, expectedErr, err)
 }
 
-func TestBigcacheWithNotFoundAndFallbackWithErr(t *testing.T) {
+func TestBigcacheWithNotFoundAndFallbackSuccess(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
 	mockBigCache := mock_storage.NewMockBigCacheInterface(ctrl)
@@ -111,16 +111,12 @@ func TestBigcacheWithNotFoundAndFallbackWithErr(t *testing.T) {
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"
-	cacheValue := "cache value"
+	cacheValue := "cache-value"
+	bytes, _ := defaultCodec.Encode(cacheValue)
 
 	mockBigCache.EXPECT().Get(cacheKey).Return(nil, bigcache.ErrEntryNotFound)
-	mockNextStorage.EXPECT().Get(cacheKey, gomock.Any()).Do(func(cacheKey string, valuePtr interface{}) {
-		bytes, _ := defaultCodec.Encode(cacheValue)
-		switch typ := valuePtr.(type) {
-		case *[]byte:
-			*typ = bytes
-		}
-	})
+	mockNextStorage.EXPECT().GetBytes(cacheKey).Return(bytes, nil)
+	mockBigCache.EXPECT().Set(cacheKey, bytes).Return(nil)
 
 	// When
 	var value string
