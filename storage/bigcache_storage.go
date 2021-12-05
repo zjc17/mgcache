@@ -1,9 +1,8 @@
-package bigcache
+package storage
 
 import (
 	"github.com/allegro/bigcache/v3"
 	"github.com/zjc17/mgcache/codec"
-	"github.com/zjc17/mgcache/storage"
 )
 
 type (
@@ -15,13 +14,13 @@ type (
 
 	bigCacheStorage struct {
 		client BigcacheInterface
-		next   storage.IFallbackStorage
+		next   IFallbackStorage
 		codec  codec.ICodec
 	}
 )
 
 func NewBigCacheStorage(client BigcacheInterface,
-	next storage.IFallbackStorage) storage.IStorage {
+	next IFallbackStorage) IStorage {
 	return bigCacheStorage{
 		client: client,
 		next:   next,
@@ -41,7 +40,7 @@ func (b bigCacheStorage) GetBytes(key string) (bytes []byte, err error) {
 	bytes, err = b.client.Get(key)
 	if err == bigcache.ErrEntryNotFound {
 		if b.next == nil {
-			return nil, storage.ErrNil
+			return nil, ErrNil
 		}
 		// TODO refactor and use refresh
 		if bytes, err = b.next.GetBytes(key); err != nil {
@@ -76,7 +75,7 @@ func (b bigCacheStorage) Invalidate(key string) (err error) {
 
 func (b bigCacheStorage) Refresh(key string) (err error) {
 	if b.next == nil {
-		return storage.ErrRefreshUnsupported
+		return ErrRefreshUnsupported
 	}
 	var bytes []byte
 	if err = b.next.Get(key, &bytes); err != nil {

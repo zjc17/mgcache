@@ -7,7 +7,7 @@ function read_dir(){
     # shellcheck disable=SC2045
     for file in `ls $1`
     do
-        if [ -d $1"/"$file ] && [ $file != "generated" ]  #注意此处之间一定要加上空格，否则会报错
+        if [ -d $1"/"$file ] && [ $file != "test" ]
         then
             read_dir $1"/"$file
         else
