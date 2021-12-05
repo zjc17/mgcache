@@ -9,6 +9,7 @@ type (
 	}
 )
 
+// NewDefaultCodec initializes the default codec
 func NewDefaultCodec() ICodec {
 	return &defaultCodec{}
 }

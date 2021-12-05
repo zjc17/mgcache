@@ -8,16 +8,24 @@ import (
 )
 
 type (
+	// RedisClientInterface defines the functions used by redisStorage
+	RedisClientInterface interface {
+		Get(ctx context.Context, key string) *redis.StringCmd
+		Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+		Del(ctx context.Context, keys ...string) *redis.IntCmd
+	}
+
 	redisStorage struct {
-		client redis.UniversalClient
-		next   *IFallbackStorage
+		client RedisClientInterface
+		next   IFallbackStorage
 		codec  codec.ICodec
 	}
 )
 
-func NewRedisStorage(client redis.UniversalClient, next *IFallbackStorage) IStorage {
+// NewRedisStorage initializes the redisStorage
+func NewRedisStorage(redisClient RedisClientInterface, next IFallbackStorage) IStorage {
 	return &redisStorage{
-		client: client,
+		client: redisClient,
 		next:   next,
 		codec:  codec.NewDefaultCodec(),
 	}
@@ -37,10 +45,7 @@ func (r redisStorage) GetBytes(key string) (bytes []byte, err error) {
 		if r.next == nil {
 			return nil, ErrNil
 		}
-		if bytes, err = (*r.next).GetBytes(key); err != nil {
-			return
-		}
-		err = r.Set(key, bytes)
+		bytes, err = r.Refresh(key)
 	default:
 		return
 	}
@@ -80,16 +85,16 @@ func (r redisStorage) Invalidate(key string) (err error) {
 	if r.next == nil {
 		return
 	}
-	return (*r.next).Invalidate(key)
+	return r.next.Invalidate(key)
 }
 
-func (r redisStorage) Refresh(key string) (err error) {
+func (r redisStorage) Refresh(key string) (bytes []byte, err error) {
 	if r.next == nil {
-		return ErrRefreshUnsupported
+		return nil, ErrRefreshUnsupported
 	}
-	var bytes []byte
-	if err = (*r.next).Get(key, &bytes); err != nil {
+	if bytes, err = r.next.GetBytes(key); err != nil {
 		return
 	}
-	return r.Set(key, bytes)
+	err = r.Set(key, bytes)
+	return
 }

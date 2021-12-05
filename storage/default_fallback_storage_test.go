@@ -16,26 +16,14 @@ func TestInvalidate(t *testing.T) {
 	}
 }
 
-func TestGet_Failed(t *testing.T) {
-	var defaultFallbackStorage IFallbackStorage
-	var loadFunc LoadFunc = func(key string) (interface{}, error) {
-		return "value", nil
-	}
-	defaultFallbackStorage = NewDefaultFallbackStorage(loadFunc)
-	var value string
-	err := defaultFallbackStorage.Get("", &value)
-	assert.Equal(t, ErrTypeUnsupported, err)
-}
-
 func TestGet_Success(t *testing.T) {
 	var defaultFallbackStorage IFallbackStorage
 	var loadFunc LoadFunc = func(key string) (interface{}, error) {
 		return "value", nil
 	}
 	defaultFallbackStorage = NewDefaultFallbackStorage(loadFunc)
-	var value = make([]byte, 0)
-	if err := defaultFallbackStorage.Get("", &value); err != nil {
-		t.Error("test failed")
-	}
-	assert.NotNil(t, value)
+
+	bytes, err := defaultFallbackStorage.GetBytes("")
+	assert.Nil(t, err)
+	assert.NotNil(t, bytes)
 }

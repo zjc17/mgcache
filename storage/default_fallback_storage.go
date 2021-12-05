@@ -3,32 +3,21 @@ package storage
 import "github.com/zjc17/mgcache/codec"
 
 type (
-	LoadFunc               func(key string) (interface{}, error)
+	// LoadFunc defines the function to load resource
+	LoadFunc func(key string) (interface{}, error)
+
 	defaultFallbackStorage struct {
 		loadFunc LoadFunc
 		codec    codec.ICodec
 	}
 )
 
+// NewDefaultFallbackStorage initializes the defaultFallbackStorage
 func NewDefaultFallbackStorage(loadFunc LoadFunc) IFallbackStorage {
 	return &defaultFallbackStorage{
 		loadFunc: loadFunc,
 		codec:    codec.NewDefaultCodec(),
 	}
-}
-
-func (d defaultFallbackStorage) Get(key string, valuePtr interface{}) (err error) {
-	var loadedValue interface{}
-	loadedValue, err = d.loadFunc(key)
-	switch typ := valuePtr.(type) {
-	case *[]byte:
-		var bytes []byte
-		bytes, err = d.codec.Encode(loadedValue)
-		*typ = bytes
-	default:
-		err = ErrTypeUnsupported
-	}
-	return
 }
 
 func (d defaultFallbackStorage) GetBytes(key string) (bytes []byte, err error) {

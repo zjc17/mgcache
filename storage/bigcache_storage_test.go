@@ -206,7 +206,7 @@ func TestRefresh(t *testing.T) {
 	cacheKey := "cache-key"
 
 	// When
-	err := bigcacheStorage.Refresh(cacheKey)
+	_, err := bigcacheStorage.Refresh(cacheKey)
 
 	// Then
 	assert.Equal(t, ErrRefreshUnsupported, err)
@@ -223,16 +223,11 @@ func TestRefreshWithFallbackStorage(t *testing.T) {
 	cacheValue := "cache value"
 	bytes, _ := defaultCodec.Encode(cacheValue)
 
-	mockNextStorage.EXPECT().Get(cacheKey, gomock.Any()).Do(func(cacheKey string, valuePtr interface{}) {
-		switch typ := valuePtr.(type) {
-		case *[]byte:
-			*typ = bytes
-		}
-	})
+	mockNextStorage.EXPECT().GetBytes(cacheKey).Return(bytes, nil)
 	mockBigCache.EXPECT().Set(cacheKey, bytes).Return(nil)
 
 	// When
-	err := storage.Refresh(cacheKey)
+	_, err := storage.Refresh(cacheKey)
 	assert.Nil(t, err)
 }
 
@@ -246,9 +241,9 @@ func TestRefreshWithFallbackStorageWhenErr(t *testing.T) {
 	cacheKey := "cache-key"
 	expectedErr := errors.New("an unexpected error occurred")
 
-	mockNextStorage.EXPECT().Get(cacheKey, gomock.Any()).Return(expectedErr)
+	mockNextStorage.EXPECT().GetBytes(cacheKey).Return(nil, expectedErr)
 
 	// When
-	err := storage.Refresh(cacheKey)
+	_, err := storage.Refresh(cacheKey)
 	assert.Equal(t, expectedErr, err)
 }

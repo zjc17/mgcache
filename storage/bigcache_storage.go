@@ -6,6 +6,7 @@ import (
 )
 
 type (
+	// BigcacheInterface defines the functions used by bigCacheStorage
 	BigcacheInterface interface {
 		Get(key string) ([]byte, error)
 		Set(key string, entry []byte) error
@@ -19,6 +20,7 @@ type (
 	}
 )
 
+// NewBigCacheStorage initializes the bigCacheStorage
 func NewBigCacheStorage(client BigcacheInterface,
 	next IFallbackStorage) IStorage {
 	return bigCacheStorage{
@@ -42,11 +44,7 @@ func (b bigCacheStorage) GetBytes(key string) (bytes []byte, err error) {
 		if b.next == nil {
 			return nil, ErrNil
 		}
-		// TODO refactor and use refresh
-		if bytes, err = b.next.GetBytes(key); err != nil {
-			return
-		}
-		err = b.Set(key, bytes)
+		bytes, err = b.Refresh(key)
 	}
 	return
 }
@@ -73,13 +71,13 @@ func (b bigCacheStorage) Invalidate(key string) (err error) {
 	return b.next.Invalidate(key)
 }
 
-func (b bigCacheStorage) Refresh(key string) (err error) {
+func (b bigCacheStorage) Refresh(key string) (bytes []byte, err error) {
 	if b.next == nil {
-		return ErrRefreshUnsupported
+		return nil, ErrRefreshUnsupported
 	}
-	var bytes []byte
-	if err = b.next.Get(key, &bytes); err != nil {
+	if bytes, err = b.next.GetBytes(key); err != nil {
 		return
 	}
-	return b.Set(key, bytes)
+	err = b.Set(key, bytes)
+	return
 }

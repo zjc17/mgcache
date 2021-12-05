@@ -77,11 +77,12 @@ func (mr *MockIStorageMockRecorder) Invalidate(key interface{}) *gomock.Call {
 }
 
 // Refresh mocks base method.
-func (m *MockIStorage) Refresh(key string) error {
+func (m *MockIStorage) Refresh(key string) ([]byte, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Refresh", key)
-	ret0, _ := ret[0].(error)
-	return ret0
+	ret0, _ := ret[0].([]byte)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
 }
 
 // Refresh indicates an expected call of Refresh.
@@ -125,20 +126,6 @@ func NewMockIFallbackStorage(ctrl *gomock.Controller) *MockIFallbackStorage {
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockIFallbackStorage) EXPECT() *MockIFallbackStorageMockRecorder {
 	return m.recorder
-}
-
-// Get mocks base method.
-func (m *MockIFallbackStorage) Get(key string, value interface{}) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", key, value)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Get indicates an expected call of Get.
-func (mr *MockIFallbackStorageMockRecorder) Get(key, value interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockIFallbackStorage)(nil).Get), key, value)
 }
 
 // GetBytes mocks base method.
