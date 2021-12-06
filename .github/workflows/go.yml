@@ -24,4 +24,10 @@ jobs:
       run: go build -v ./...
 
     - name: Test
-      run: go test -v -race -cover -coverprofile=coverage.txt -covermode=atomic ./...
+      run: go test -v -race -cover -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.out
