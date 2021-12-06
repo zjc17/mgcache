@@ -32,7 +32,6 @@ func NewRedisStorage(redisClient RedisClientInterface, next IFallbackStorage) IS
 }
 
 func (r redisStorage) GetBytes(key string) (bytes []byte, err error) {
-
 	func() {
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 		defer cancel()
