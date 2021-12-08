@@ -1,9 +1,8 @@
-package storage
+package mgcache
 
 import (
 	"context"
 	"github.com/go-redis/redis/v8"
-	"github.com/zjc17/mgcache/codec"
 	"time"
 )
 
@@ -18,16 +17,24 @@ type (
 	redisStorage struct {
 		client RedisClientInterface
 		next   IFallbackStorage
-		codec  codec.ICodec
+		codec  ICodec
 	}
 )
 
 // NewRedisStorage initializes the redisStorage
-func NewRedisStorage(redisClient RedisClientInterface, next IFallbackStorage) IStorage {
+func NewRedisStorage(redisClient RedisClientInterface,
+	next IFallbackStorage,
+	opts ...IStorageOption) IStorage {
+	opt := options{
+		codec: NewDefaultCodec(),
+	}
+	for _, o := range opts {
+		o.apply(&opt)
+	}
 	return &redisStorage{
 		client: redisClient,
 		next:   next,
-		codec:  codec.NewDefaultCodec(),
+		codec:  opt.codec,
 	}
 }
 

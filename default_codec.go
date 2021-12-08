@@ -1,4 +1,4 @@
-package codec
+package mgcache
 
 import (
 	"github.com/vmihailenco/msgpack/v5"

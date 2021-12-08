@@ -1,6 +1,4 @@
-package storage
-
-import "github.com/zjc17/mgcache/codec"
+package mgcache
 
 type (
 	// LoadFunc defines the function to load resource
@@ -8,15 +6,22 @@ type (
 
 	defaultFallbackStorage struct {
 		loadFunc LoadFunc
-		codec    codec.ICodec
+		codec    ICodec
 	}
 )
 
 // NewDefaultFallbackStorage initializes the defaultFallbackStorage
-func NewDefaultFallbackStorage(loadFunc LoadFunc) IFallbackStorage {
+func NewDefaultFallbackStorage(loadFunc LoadFunc,
+	opts ...IStorageOption) IFallbackStorage {
+	opt := options{
+		codec: NewDefaultCodec(),
+	}
+	for _, o := range opts {
+		o.apply(&opt)
+	}
 	return &defaultFallbackStorage{
 		loadFunc: loadFunc,
-		codec:    codec.NewDefaultCodec(),
+		codec:    opt.codec,
 	}
 }
 

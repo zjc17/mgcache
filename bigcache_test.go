@@ -1,21 +1,18 @@
-package storage
+package mgcache
 
 import (
 	"errors"
 	"github.com/allegro/bigcache/v3"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	"github.com/zjc17/mgcache/codec"
-	mock_storage "github.com/zjc17/mgcache/test/mock/storage"
+	mock "github.com/zjc17/mgcache/test/mock"
 	"testing"
 )
-
-var defaultCodec = codec.NewDefaultCodec()
 
 func TestNewBigcacheStorage(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 
 	// When
 	bigcacheStorage := NewBigCacheStorage(mockBigCache, nil)
@@ -25,9 +22,10 @@ func TestNewBigcacheStorage(t *testing.T) {
 }
 
 func TestBigcacheGet(t *testing.T) {
+	var defaultCodec = NewDefaultCodec()
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, nil)
 
 	cacheKey := "cache-key"
@@ -47,7 +45,7 @@ func TestBigcacheGet(t *testing.T) {
 func TestBigcacheWhenError(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, nil)
 
 	cacheKey := "cache-key"
@@ -66,7 +64,7 @@ func TestBigcacheWhenError(t *testing.T) {
 func TestBigcacheWithNotFoundErr(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, nil)
 
 	cacheKey := "cache-key"
@@ -84,8 +82,8 @@ func TestBigcacheWithNotFoundErr(t *testing.T) {
 func TestBigcacheWithNotFoundAndFallback(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"
@@ -103,10 +101,11 @@ func TestBigcacheWithNotFoundAndFallback(t *testing.T) {
 }
 
 func TestBigcacheWithNotFoundAndFallbackSuccess(t *testing.T) {
+	var defaultCodec = NewDefaultCodec()
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"
@@ -129,7 +128,7 @@ func TestBigcacheWithNotFoundAndFallbackSuccess(t *testing.T) {
 func TestBigcacheInvalidate(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, nil)
 
 	cacheKey := "cache-key"
@@ -146,7 +145,7 @@ func TestBigcacheInvalidate(t *testing.T) {
 func TestBigcacheInvalidateWhenErr(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, nil)
 
 	cacheKey := "cache-key"
@@ -164,8 +163,8 @@ func TestBigcacheInvalidateWhenErr(t *testing.T) {
 func TestInvalidateWithFallbackStorage(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"
@@ -182,8 +181,8 @@ func TestInvalidateWithFallbackStorage(t *testing.T) {
 func TestInvalidateWithExpiredAndFallbackStorage(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"
@@ -200,7 +199,7 @@ func TestInvalidateWithExpiredAndFallbackStorage(t *testing.T) {
 func TestRefresh(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
 	bigcacheStorage := NewBigCacheStorage(mockBigCache, nil)
 
 	cacheKey := "cache-key"
@@ -213,10 +212,11 @@ func TestRefresh(t *testing.T) {
 }
 
 func TestRefreshWithFallbackStorage(t *testing.T) {
+	var defaultCodec = NewDefaultCodec()
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"
@@ -234,8 +234,8 @@ func TestRefreshWithFallbackStorage(t *testing.T) {
 func TestRefreshWithFallbackStorageWhenErr(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockBigCache := mock_storage.NewMockBigcacheInterface(ctrl)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
+	mockBigCache := mock.NewMockBigcacheInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
 	storage := NewBigCacheStorage(mockBigCache, mockNextStorage)
 
 	cacheKey := "cache-key"

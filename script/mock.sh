@@ -11,7 +11,7 @@ function read_dir(){
         then
             read_dir $1"/"$file
         else
-            if [ "${file##*.}"x = "go"x ] && [[ $file != *_test.go ]]
+            if [ "${file##*.}"x = "go"x ] && [[ $file != *_test.go ]] && [[ $file != options.go ]]
             then
                 inputFile=$1"/"$file
                 outputFile=$1"/mock_"$file

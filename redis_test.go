@@ -1,18 +1,18 @@
-package storage
+package mgcache
 
 import (
 	"errors"
 	"github.com/go-redis/redis/v8"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-	mock_storage "github.com/zjc17/mgcache/test/mock/storage"
+	mock "github.com/zjc17/mgcache/test/mock"
 	"testing"
 )
 
 func TestNewRedisStorage(t *testing.T) {
 	// Given
 	ctrl := gomock.NewController(t)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 
 	// When
 	redisStorageClient := NewRedisStorage(mockRedisClient, nil)
@@ -32,7 +32,7 @@ func TestGet(t *testing.T) {
 
 	// Given
 	ctrl := gomock.NewController(t)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 
 	cmd = &redis.StringCmd{}
 	cmd.SetVal(cacheValue)
@@ -79,8 +79,8 @@ func TestGetWithNext(t *testing.T) {
 
 	// Given
 	ctrl := gomock.NewController(t)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 	redisStorageClient := NewRedisStorage(mockRedisClient, mockNextStorage)
 
 
@@ -106,7 +106,7 @@ func TestRedisInvalidate(t *testing.T) {
 	)
 	// Given
 	ctrl := gomock.NewController(t)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 	redisStorageClient := NewRedisStorage(mockRedisClient, nil)
 	cmd = &redis.IntCmd{}
 	mockRedisClient.EXPECT().Del(gomock.Any(), cacheKey).Return(cmd)
@@ -137,8 +137,8 @@ func TestRedisInvalidateWithNext(t *testing.T) {
 		cmd *redis.IntCmd
 	)
 	ctrl := gomock.NewController(t)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 	redisStorageClient := NewRedisStorage(mockRedisClient, mockNextStorage)
 	// Given
 	cmd = &redis.IntCmd{}
@@ -156,7 +156,7 @@ func TestRedisRefresh(t *testing.T) {
 		bytes []byte
 	)
 	ctrl := gomock.NewController(t)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 	redisStorageClient := NewRedisStorage(mockRedisClient, nil)
 	// Given
 
@@ -176,8 +176,8 @@ func TestRedisRefreshWithNext(t *testing.T) {
 		cmd *redis.StatusCmd
 	)
 	ctrl := gomock.NewController(t)
-	mockNextStorage := mock_storage.NewMockIFallbackStorage(ctrl)
-	mockRedisClient := mock_storage.NewMockRedisClientInterface(ctrl)
+	mockNextStorage := mock.NewMockIFallbackStorage(ctrl)
+	mockRedisClient := mock.NewMockRedisClientInterface(ctrl)
 	redisStorageClient := NewRedisStorage(mockRedisClient, mockNextStorage)
 	// Given
 	cmd = &redis.StatusCmd{}

@@ -1,8 +1,16 @@
-package storage
+package mgcache
 
-import "errors"
+import (
+	"errors"
+)
 
 type (
+	// ICodec codec for cacheable objects
+	ICodec interface {
+		Encode(interface{}) ([]byte, error)
+		Decode(bytes []byte, valuePtr interface{}) error
+	}
+
 	// IStorage defines a storage interface
 	IStorage interface {
 		IFallbackStorage
@@ -20,6 +28,12 @@ type (
 		GetBytes(key string) (bytes []byte, err error)
 		// Invalidate removes the cached key and propagates to the next layer of IStorage
 		Invalidate(key string) (err error)
+	}
+
+	// IDistributedRefresher refreshes the cache for distributive scenarios' usage purposes.
+	IDistributedRefresher interface {
+		// Notify notifies all storage to refresh specific key
+		Notify(key string) (err error)
 	}
 )
 

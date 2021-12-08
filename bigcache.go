@@ -1,8 +1,7 @@
-package storage
+package mgcache
 
 import (
 	"github.com/allegro/bigcache/v3"
-	"github.com/zjc17/mgcache/codec"
 )
 
 type (
@@ -16,17 +15,24 @@ type (
 	bigCacheStorage struct {
 		client BigcacheInterface
 		next   IFallbackStorage
-		codec  codec.ICodec
+		codec  ICodec
 	}
 )
 
 // NewBigCacheStorage initializes the bigCacheStorage
 func NewBigCacheStorage(client BigcacheInterface,
-	next IFallbackStorage) IStorage {
+	next IFallbackStorage,
+	opts ...IStorageOption) IStorage {
+	opt := options{
+		codec: NewDefaultCodec(),
+	}
+	for _, o := range opts {
+		o.apply(&opt)
+	}
 	return bigCacheStorage{
 		client: client,
 		next:   next,
-		codec:  codec.NewDefaultCodec(),
+		codec:  opt.codec,
 	}
 }
 
