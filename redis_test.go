@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	mock "github.com/zjc17/mgcache/test/mock"
 	"testing"
+	"time"
 )
 
 func TestNewRedisStorage(t *testing.T) {
@@ -19,6 +20,13 @@ func TestNewRedisStorage(t *testing.T) {
 
 	// Then
 	assert.IsType(t, new(redisStorage), redisStorageClient)
+
+	// When
+	redisStorageClient = NewRedisStorage(mockRedisClient, nil, WithTimeToLive(time.Hour))
+
+	// Then
+	assert.IsType(t, new(redisStorage), redisStorageClient)
+
 }
 
 func TestGet(t *testing.T) {

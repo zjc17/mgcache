@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	mock "github.com/zjc17/mgcache/test/mock"
 	"testing"
+	"time"
 )
 
 func TestNewBigcacheStorage(t *testing.T) {
@@ -16,6 +17,12 @@ func TestNewBigcacheStorage(t *testing.T) {
 
 	// When
 	bigcacheStorage := NewBigCacheStorage(mockBigCache, nil)
+
+	// Then
+	assert.IsType(t, *new(bigCacheStorage), bigcacheStorage)
+
+	// When
+	bigcacheStorage = NewBigCacheStorage(mockBigCache, nil, WithTimeToLive(time.Hour))
 
 	// Then
 	assert.IsType(t, *new(bigCacheStorage), bigcacheStorage)

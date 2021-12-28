@@ -25,21 +25,27 @@ type (
 func NewDefaultDistributedRefresher(topic string,
 	redisClient PubSubClientInterface,
 	storageClient IStorage) IDistributedRefresher {
+
 	refreshEventChan := redisClient.Subscribe(context.Background(), topic).Channel()
-	go func() {
-		for key := range refreshEventChan {
-			key := key
-			go func() {
-				if _, err := storageClient.Refresh(key.Payload); err != nil {
-					zap.L().DPanic("failed to refresh review cache", zap.Error(err))
-				}
-			}()
-		}
-	}()
-	return &defaultDistributedRefresher{
+
+	distributedRefresher := &defaultDistributedRefresher{
 		pubSubClient:  redisClient,
 		storageClient: storageClient,
 		topic:         topic,
+	}
+
+	go distributedRefresher.listenChannel(refreshEventChan)
+
+	return distributedRefresher
+}
+
+func (d defaultDistributedRefresher) listenChannel(refreshEventChan <-chan *redis.Message) {
+	for msg := range refreshEventChan {
+		go func(msg *redis.Message) {
+			if _, err := d.storageClient.Refresh(msg.Payload); err != nil {
+				zap.L().DPanic("failed to refresh review cache", zap.Error(err))
+			}
+		}(msg)
 	}
 }
 
