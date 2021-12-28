@@ -12,12 +12,12 @@ type (
 
 // NewDefaultFallbackStorage initializes the defaultFallbackStorage
 func NewDefaultFallbackStorage(loadFunc LoadFunc,
-	opts ...IStorageOption) IFallbackStorage {
-	opt := options{
+	opts ...OptionFunc) IFallbackStorage {
+	opt := StorageOption{
 		codec: NewDefaultCodec(),
 	}
 	for _, o := range opts {
-		o.apply(&opt)
+		o(&opt)
 	}
 	return &defaultFallbackStorage{
 		loadFunc: loadFunc,

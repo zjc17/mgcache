@@ -1,21 +1,35 @@
 package mgcache
 
-type (
-	// IStorageOption options for IStorage
-	IStorageOption interface {
-		apply(opts *options)
-	}
+import "time"
 
-	options struct {
-		codec ICodec
+type (
+	// OptionFunc option function for IStorage
+	OptionFunc func(storageOption *StorageOption)
+
+	// StorageOption hold options for storage client
+	StorageOption struct {
+		codec          ICodec
+		timeToLive     time.Duration
+		contextTimeout time.Duration
 	}
 )
 
-func (o options) apply(opts *options) {
-	opts.codec = o.codec
+// WithCodec customized codec for storage client
+func WithCodec(c ICodec) OptionFunc {
+	return func(storageOption *StorageOption) {
+		storageOption.codec = c
+	}
 }
 
-// WithCodec TODO
-func WithCodec(c ICodec) IStorageOption {
-	return options{codec: c}
+// WithTimeToLive customized time-to-live for storage client
+func WithTimeToLive(d time.Duration) OptionFunc {
+	return func(storageOption *StorageOption) {
+		storageOption.timeToLive = d
+	}
+}
+
+func WithContextTimeout(d time.Duration) OptionFunc {
+	return func(storageOption *StorageOption) {
+		storageOption.contextTimeout = d
+	}
 }

@@ -15,32 +15,40 @@ type (
 	}
 
 	redisStorage struct {
-		client RedisClientInterface
-		next   IFallbackStorage
-		codec  ICodec
+		client         RedisClientInterface
+		next           IFallbackStorage
+		codec          ICodec
+		timeToLive     time.Duration
+		contextTimeout time.Duration
 	}
 )
 
 // NewRedisStorage initializes the redisStorage
 func NewRedisStorage(redisClient RedisClientInterface,
 	next IFallbackStorage,
-	opts ...IStorageOption) IStorage {
-	opt := options{
-		codec: NewDefaultCodec(),
+	opts ...OptionFunc) IStorage {
+
+	opt := StorageOption{
+		codec:          NewDefaultCodec(),
+		timeToLive:     1 * time.Hour,
+		contextTimeout: 100 * time.Millisecond,
 	}
 	for _, o := range opts {
-		o.apply(&opt)
+		o(&opt)
 	}
+
 	return &redisStorage{
-		client: redisClient,
-		next:   next,
-		codec:  opt.codec,
+		client:         redisClient,
+		next:           next,
+		codec:          opt.codec,
+		timeToLive:     opt.timeToLive,
+		contextTimeout: opt.contextTimeout,
 	}
 }
 
 func (r redisStorage) GetBytes(key string) (bytes []byte, err error) {
 	func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), r.contextTimeout)
 		defer cancel()
 		bytes, err = r.client.Get(ctx, key).Bytes()
 	}()
@@ -67,20 +75,20 @@ func (r redisStorage) Get(key string, valuePtr interface{}) (err error) {
 }
 
 func (r redisStorage) Set(key string, value interface{}) (err error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	ctx, cancel := context.WithTimeout(context.Background(), r.contextTimeout)
 	defer cancel()
 
 	var bytes []byte
 	bytes, err = r.codec.Encode(value)
 
-	err = r.client.Set(ctx, key, bytes, time.Hour).Err()
+	err = r.client.Set(ctx, key, bytes, r.timeToLive).Err()
 	return
 }
 
 func (r redisStorage) Invalidate(key string) (err error) {
 
 	func() {
-		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
+		ctx, cancel := context.WithTimeout(context.Background(), r.contextTimeout)
 		defer cancel()
 		if err = r.client.Del(ctx, key).Err(); err != nil {
 			return

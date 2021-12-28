@@ -2,6 +2,7 @@ package mgcache
 
 import (
 	"github.com/allegro/bigcache/v3"
+	"time"
 )
 
 type (
@@ -13,26 +14,34 @@ type (
 	}
 
 	bigCacheStorage struct {
-		client BigcacheInterface
-		next   IFallbackStorage
-		codec  ICodec
+		client         BigcacheInterface
+		next           IFallbackStorage
+		codec          ICodec
+		timeToLive     time.Duration
+		contextTimeout time.Duration
 	}
 )
 
 // NewBigCacheStorage initializes the bigCacheStorage
 func NewBigCacheStorage(client BigcacheInterface,
 	next IFallbackStorage,
-	opts ...IStorageOption) IStorage {
-	opt := options{
-		codec: NewDefaultCodec(),
+	opts ...OptionFunc) IStorage {
+
+	opt := StorageOption{
+		codec:          NewDefaultCodec(),
+		timeToLive:     10 * time.Minute,
+		contextTimeout: 100 * time.Millisecond,
 	}
 	for _, o := range opts {
-		o.apply(&opt)
+		o(&opt)
 	}
+
 	return bigCacheStorage{
-		client: client,
-		next:   next,
-		codec:  opt.codec,
+		client:         client,
+		next:           next,
+		codec:          opt.codec,
+		timeToLive:     opt.timeToLive,
+		contextTimeout: opt.contextTimeout,
 	}
 }
 
