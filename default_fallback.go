@@ -28,6 +28,9 @@ func NewDefaultFallbackStorage(loadFunc LoadFunc,
 func (d defaultFallbackStorage) GetBytes(key string) (bytes []byte, err error) {
 	var loadedValue interface{}
 	loadedValue, err = d.loadFunc(key)
+	if err != nil {
+		return
+	}
 	return d.codec.Encode(loadedValue)
 }
 
