@@ -1,17 +1,26 @@
 package mgcache
 
-import "sync"
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"sync"
+)
 
 var (
-	defaultMetricCollector = NewEmptyCollector()
-	defaultStoreType       = "store_type_unknown"
+	defaultMetricCollector      = NewEmptyCollector()
+	defaultStoreType            = "store_type_unknown"
+	defaultPrometheusRegisterer = prometheus.DefaultRegisterer
 
-	prometheusMetricCollector         = NewMetricCollector()
+	// should be used only by GetPrometheusMetricCollector
+	prometheusMetricCollector         IMetricCollector
 	initPrometheusMetricCollectorOnce sync.Once
 )
 
 func SetDefaultMetricCollector(collector IMetricCollector) {
 	defaultMetricCollector = collector
+}
+
+func SetDefaultPrometheusRegisterer(registerer prometheus.Registerer) {
+	defaultPrometheusRegisterer = registerer
 }
 
 func GetPrometheusMetricCollector() IMetricCollector {

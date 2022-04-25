@@ -2,7 +2,6 @@ package mgcache
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
 const (
@@ -42,7 +41,8 @@ type (
 )
 
 func NewMetricCollector() IMetricCollector {
-	cacheBehaviorMetric := promauto.NewGaugeVec(
+
+	cacheBehaviorMetric := prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Name:      "mgcache_behavior",
 			Namespace: namespaceCache,
@@ -50,6 +50,7 @@ func NewMetricCollector() IMetricCollector {
 		},
 		[]string{"service", "store", "metric"},
 	)
+	defaultPrometheusRegisterer.MustRegister(cacheBehaviorMetric)
 
 	return &metricCollector{
 		cacheBehaviorMetric: cacheBehaviorMetric,
