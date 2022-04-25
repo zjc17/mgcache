@@ -8,15 +8,6 @@ const (
 	namespaceCache = "mgcache"
 )
 
-var (
-	// gaugeVecLabelSet set value into cache
-	gaugeVecLabelSet = prometheus.Labels{"type": "set"}
-	// gaugeVecLabelHit get with cache hit
-	gaugeVecLabelHit = prometheus.Labels{"type": "hit"}
-	// gaugeVecLabelMiss get with cache miss
-	gaugeVecLabelMiss = prometheus.Labels{"type": "miss"}
-)
-
 const (
 	metricValueCacheHit  = "hit"
 	metricValueCacheMiss = "miss"
@@ -33,7 +24,7 @@ type (
 	}
 
 	metricCollector struct {
-		cacheBehaviorMetric *prometheus.GaugeVec
+		cacheBehaviorMetric *prometheus.CounterVec
 	}
 
 	emptyCollector struct {
@@ -42,8 +33,8 @@ type (
 
 func NewMetricCollector() IMetricCollector {
 
-	cacheBehaviorMetric := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
+	cacheBehaviorMetric := prometheus.NewCounterVec(
+		prometheus.CounterOpts{
 			Name:      "mgcache_behavior",
 			Namespace: namespaceCache,
 			Help:      "This represent the number of items in cache",
