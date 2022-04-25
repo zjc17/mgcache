@@ -20,6 +20,11 @@ type (
 		codec          ICodec
 		timeToLive     time.Duration
 		contextTimeout time.Duration
+
+		storeType         string
+		serviceIdentifier string
+
+		metricCollector IMetricCollector
 	}
 )
 
@@ -29,20 +34,27 @@ func NewRedisStorage(redisClient RedisClientInterface,
 	opts ...OptionFunc) IStorage {
 
 	opt := StorageOption{
-		codec:          NewDefaultCodec(),
-		timeToLive:     1 * time.Hour,
-		contextTimeout: 100 * time.Millisecond,
+		codec:             NewDefaultCodec(),
+		timeToLive:        1 * time.Hour,
+		contextTimeout:    100 * time.Millisecond,
+		serviceIdentifier: defaultServiceIdentifier,
+		metricCollector:   defaultMetricCollector,
 	}
 	for _, o := range opts {
 		o(&opt)
 	}
 
 	return &redisStorage{
-		client:         redisClient,
-		next:           next,
-		codec:          opt.codec,
-		timeToLive:     opt.timeToLive,
-		contextTimeout: opt.contextTimeout,
+		client: redisClient,
+		next:   next,
+
+		codec:             opt.codec,
+		timeToLive:        opt.timeToLive,
+		contextTimeout:    opt.contextTimeout,
+		serviceIdentifier: opt.serviceIdentifier,
+		metricCollector:   opt.metricCollector,
+
+		storeType: "redis",
 	}
 }
 
@@ -55,11 +67,15 @@ func (r redisStorage) GetBytes(key string) (bytes []byte, err error) {
 
 	switch err {
 	case nil:
+		// Cache Hit
+		r.metricCollector.CacheHit(r.serviceIdentifier, r.storeType)
 	case redis.Nil:
 		if r.next == nil {
 			return nil, ErrNil
 		}
 		bytes, err = r.Refresh(key)
+		// Cache Miss
+		r.metricCollector.CacheMiss(r.serviceIdentifier, r.storeType)
 	default:
 		return
 	}
@@ -82,6 +98,11 @@ func (r redisStorage) Set(key string, value interface{}) (err error) {
 	bytes, err = r.codec.Encode(value)
 
 	err = r.client.Set(ctx, key, bytes, r.timeToLive).Err()
+	if err != nil {
+		// Cache Set
+		r.metricCollector.CacheSet(r.serviceIdentifier, r.storeType)
+		return
+	}
 	return
 }
 
