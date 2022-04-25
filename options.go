@@ -11,7 +11,16 @@ type (
 		codec          ICodec
 		timeToLive     time.Duration
 		contextTimeout time.Duration
+
+		// serviceIdentifier identifier for prometheus cacheBehaviorMetric
+		serviceIdentifier string
+
+		metricCollector IMetricCollector
 	}
+)
+
+const (
+	defaultServiceIdentifier = "mgcache"
 )
 
 // WithCodec customized codec for storage client
@@ -28,8 +37,16 @@ func WithTimeToLive(d time.Duration) OptionFunc {
 	}
 }
 
+// WithContextTimeout customized context timeout for storage client
 func WithContextTimeout(d time.Duration) OptionFunc {
 	return func(storageOption *StorageOption) {
 		storageOption.contextTimeout = d
+	}
+}
+
+// WithMetricCollector customized metric collector for storage client
+func WithMetricCollector(c IMetricCollector) OptionFunc {
+	return func(storageOption *StorageOption) {
+		storageOption.metricCollector = c
 	}
 }

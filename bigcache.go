@@ -19,6 +19,11 @@ type (
 		codec          ICodec
 		timeToLive     time.Duration
 		contextTimeout time.Duration
+
+		storeType         string
+		serviceIdentifier string
+
+		metricCollector IMetricCollector
 	}
 )
 
@@ -28,20 +33,27 @@ func NewBigCacheStorage(client BigcacheInterface,
 	opts ...OptionFunc) IStorage {
 
 	opt := StorageOption{
-		codec:          NewDefaultCodec(),
-		timeToLive:     10 * time.Minute,
-		contextTimeout: 100 * time.Millisecond,
+		codec:             NewDefaultCodec(),
+		timeToLive:        10 * time.Minute,
+		contextTimeout:    100 * time.Millisecond,
+		serviceIdentifier: defaultServiceIdentifier,
+		metricCollector:   defaultMetricCollector,
 	}
 	for _, o := range opts {
 		o(&opt)
 	}
 
 	return bigCacheStorage{
-		client:         client,
-		next:           next,
-		codec:          opt.codec,
-		timeToLive:     opt.timeToLive,
-		contextTimeout: opt.contextTimeout,
+		client: client,
+		next:   next,
+
+		codec:             opt.codec,
+		timeToLive:        opt.timeToLive,
+		contextTimeout:    opt.contextTimeout,
+		serviceIdentifier: opt.serviceIdentifier,
+		metricCollector:   opt.metricCollector,
+
+		storeType: "bigcache",
 	}
 }
 
@@ -60,6 +72,11 @@ func (b bigCacheStorage) GetBytes(key string) (bytes []byte, err error) {
 			return nil, ErrNil
 		}
 		bytes, err = b.Refresh(key)
+		// Cache Miss
+		b.metricCollector.CacheMiss(b.serviceIdentifier, b.storeType)
+	} else {
+		// Cache Hit
+		b.metricCollector.CacheHit(b.serviceIdentifier, b.storeType)
 	}
 	return
 }
@@ -68,6 +85,8 @@ func (b bigCacheStorage) Set(key string, value interface{}) (err error) {
 	var bytes []byte
 	bytes, err = b.codec.Encode(value)
 	err = b.client.Set(key, bytes)
+	// Cache Set
+	b.metricCollector.CacheSet(b.serviceIdentifier, b.storeType)
 	return
 }
 
