@@ -45,8 +45,16 @@ func WithContextTimeout(d time.Duration) OptionFunc {
 }
 
 // WithMetricCollector customized metric collector for storage client
+// if not set, default metric collector defaultMetricCollector will be used
 func WithMetricCollector(c IMetricCollector) OptionFunc {
 	return func(storageOption *StorageOption) {
 		storageOption.metricCollector = c
+	}
+}
+
+// WithServiceIdentifier customized service identifier for storage client
+func WithServiceIdentifier(s string) OptionFunc {
+	return func(storageOption *StorageOption) {
+		storageOption.serviceIdentifier = s
 	}
 }
