@@ -43,7 +43,7 @@ func (d defaultDistributedRefresher) listenChannel(refreshEventChan <-chan *redi
 	for msg := range refreshEventChan {
 		go func(msg *redis.Message) {
 			if _, err := d.storageClient.Refresh(msg.Payload); err != nil {
-				zap.L().DPanic("failed to refresh review cache", zap.Error(err))
+				zap.L().DPanic("failed to distributively refresh cache", zap.String("topic", d.topic), zap.Error(err))
 			}
 		}(msg)
 	}
